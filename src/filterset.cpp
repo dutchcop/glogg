@@ -130,14 +130,19 @@ FilterSet::FilterSet()
     qRegisterMetaTypeStreamOperators<FilterSet::FilterList>( "FilterSet::FilterList" );
 }
 
+FilterSet::FilterSet(const Filter& filter)
+{
+    filterList.append(filter);
+}
+
 bool FilterSet::matchLine( const QString& line,
         QColor* foreColor, QColor* backColor ) const
 {
     for ( QList<Filter>::const_iterator i = filterList.constBegin();
           i != filterList.constEnd(); i++ ) {
         if ( i->hasMatch( line ) ) {
-            *foreColor = i->foreColor();
-            *backColor = i->backColor();
+            if (foreColor) { *foreColor = i->foreColor(); }
+            if (backColor) { *backColor = i->backColor(); }
             return true;
         }
     }

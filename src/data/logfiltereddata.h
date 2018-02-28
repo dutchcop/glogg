@@ -26,11 +26,11 @@
 #include <QByteArray>
 #include <QList>
 #include <QStringList>
-#include <QRegularExpression>
 
 #include "abstractlogdata.h"
 #include "logfiltereddataworkerthread.h"
 #include "marks.h"
+#include "filterset.h"
 
 class LogData;
 class Marks;
@@ -54,7 +54,7 @@ class LogFilteredData : public AbstractLogData {
     // Starts the async search, sending newDataAvailable() when new data found.
     // If a search is already in progress this function will block until
     // it is done, so the application should call interruptSearch() first.
-    void runSearch(const QRegularExpression &regExp );
+    void runSearch(std::shared_ptr<const FilterSet> filterSet );
     // Add to the existing search, starting at the line when the search was
     // last stopped. Used when the file on disk has been added too.
     void updateSearch();
@@ -139,7 +139,7 @@ class LogFilteredData : public AbstractLogData {
     SearchResultArray matching_lines_;
 
     const LogData* sourceLogData_;
-    QRegularExpression currentRegExp_;
+    std::shared_ptr<const FilterSet> currentFilterSet_;
     bool searchDone_;
     int maxLength_;
     int maxLengthMarks_;

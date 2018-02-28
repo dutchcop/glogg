@@ -70,12 +70,14 @@ class FilterSet : public Persistable
   public:
     // Construct an empty filter set
     FilterSet();
+    // Special constructor which takes a single filter (for impromptu search)
+    FilterSet(const Filter& filter);
 
     // Returns weither the passed line match a filter of the set,
     // if so, it returns the fore/back colors the line should use.
     // Ownership of the colors is transfered to the caller.
     bool matchLine( const QString& line,
-            QColor* foreColor, QColor* backColor ) const;
+            QColor* foreColor = nullptr, QColor* backColor = nullptr ) const;
 
     // Reads/writes the current config in the QSettings object passed
     virtual void saveToStorage( QSettings& settings ) const;

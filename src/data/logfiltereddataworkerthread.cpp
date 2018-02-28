@@ -119,7 +119,7 @@ LogFilteredDataWorkerThread::~LogFilteredDataWorkerThread()
     wait();
 }
 
-void LogFilteredDataWorkerThread::search( const QRegularExpression& regExp )
+void LogFilteredDataWorkerThread::search( std::shared_ptr<const FilterSet> filterSet )
 {
     QMutexLocker locker( &mutex_ );  // to protect operationRequested_
 
@@ -131,11 +131,11 @@ void LogFilteredDataWorkerThread::search( const QRegularExpression& regExp )
 
     interruptRequested_ = false;
     operationRequested_ = new FullSearchOperation( sourceLogData_,
-            regExp, &interruptRequested_ );
+            filterSet, &interruptRequested_ );
     operationRequestedCond_.wakeAll();
 }
 
-void LogFilteredDataWorkerThread::updateSearch(const QRegularExpression &regExp, qint64 position )
+void LogFilteredDataWorkerThread::updateSearch(std::shared_ptr<const FilterSet> filterSet, qint64 position )
 {
     QMutexLocker locker( &mutex_ );  // to protect operationRequested_
 
@@ -147,7 +147,7 @@ void LogFilteredDataWorkerThread::updateSearch(const QRegularExpression &regExp,
 
     interruptRequested_ = false;
     operationRequested_ = new UpdateSearchOperation( sourceLogData_,
-            regExp, &interruptRequested_, position );
+            filterSet, &interruptRequested_, position );
     operationRequestedCond_.wakeAll();
 }
 
@@ -209,8 +209,8 @@ void LogFilteredDataWorkerThread::run()
 //
 
 SearchOperation::SearchOperation( const LogData* sourceLogData,
-        const QRegularExpression& regExp, bool* interruptRequest )
-    : regexp_( regExp ), sourceLogData_( sourceLogData )
+        std::shared_ptr<const FilterSet> filterSet, bool* interruptRequest )
+    : filterSet_( filterSet ), sourceLogData_( sourceLogData )
 {
     interruptRequested_ = interruptRequest;
 }
@@ -241,7 +241,7 @@ void SearchOperation::doSearch( SearchData& searchData, qint64 initialLine )
 
         int j = 0;
         for ( ; j < lines.size(); j++ ) {
-            if ( regexp_.match( lines[j] ).hasMatch() ) {
+            if ( filterSet_->matchLine( lines[j] ) ) {
                 // FIXME: increase perf by removing temporary
                 const int length = sourceLogData_->getExpandedLineString(i+j).length();
                 if ( length > maxLength )

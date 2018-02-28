@@ -45,6 +45,9 @@
 #include "persistentinfo.h"
 #include "configuration.h"
 
+static const QColor DEFAULT_SEARCH_FORE_COLOUR("#000000");
+static const QColor DEFAULT_SEARCH_BACK_COLOUR("#FFFFFF");
+
 // Palette for error signaling (yellow background)
 const QPalette CrawlerWidget::errorPalette( QColor( "yellow" ) );
 
@@ -879,22 +882,18 @@ void CrawlerWidget::replaceCurrentSearch( const QString& searchText )
                 break;
         }
 
-        // Set the pattern case insensitive if needed
-        QRegularExpression::PatternOptions patternOptions =
-                QRegularExpression::UseUnicodePropertiesOption
-                | QRegularExpression::OptimizeOnFirstUsageOption;
-
-        if ( ignoreCaseCheck->checkState() == Qt::Checked )
-            patternOptions |= QRegularExpression::CaseInsensitiveOption;
-
-        // Constructs the regexp
-        QRegularExpression regexp( pattern, patternOptions );
+        // Construct the regexp, to be able to check it (pattern options not relevant yet)
+        QRegularExpression regexp( pattern );
 
         if ( regexp.isValid() ) {
             // Activate the stop button
             stopButton->setEnabled( true );
+            // Construct a Filter from the regexp (within it's own, ephemereal FilterSet)
+            Filter searchFilter = Filter( pattern, ignoreCaseCheck->checkState() == Qt::Checked,
+                                          DEFAULT_SEARCH_FORE_COLOUR, DEFAULT_SEARCH_BACK_COLOUR );
+            auto filterSet = std::make_shared<FilterSet>( searchFilter );
             // Start a new asynchronous search
-            logFilteredData_->runSearch( regexp );
+            logFilteredData_->runSearch( filterSet );
             // Accept auto-refresh of the search
             searchState_.startSearch();
         }
