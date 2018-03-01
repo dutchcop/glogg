@@ -325,6 +325,7 @@ namespace {
         lstat( file_name.c_str(), &buf );
         return ( S_ISLNK(buf.st_mode) );
 #else
+        (void)file_name;    // suppress 'unused parameter' warning
         return false;
 #endif
     }
